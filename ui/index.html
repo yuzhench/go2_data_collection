@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Go2 Offload</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f5f6f8; --card: #fff; --text: #1c2330; --muted: #667085; --line: #e3e6ec;
+    --accent: #2457d6; --ok: #1a7f4b; --warn: #b25e09; --bad: #c0362c;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { background: var(--card); border-bottom: 1px solid var(--line);
+           padding: 14px 24px; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; }
+  header h1 { font-size: 18px; margin: 0 12px 0 0; }
+  .pill { padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .pill.on { background: #e3f4ea; color: var(--ok); }
+  .pill.off { background: #fdeceb; color: var(--bad); }
+  .meta { color: var(--muted); font-size: 13px; }
+  main { max-width: 1040px; margin: 24px auto; padding: 0 24px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+  h2 { font-size: 17px; margin: 0 0 4px; }
+  p.sub { color: var(--muted); margin: 0 0 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .04em;
+       color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr.row { cursor: pointer; }
+  tr.row:hover { background: #fafbfc; }
+  img.thumb { width: 120px; height: 90px; object-fit: cover; border-radius: 6px;
+              background: #dde1e8; display: block; }
+  .when { font-weight: 600; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 12px;
+         font-weight: 600; margin-right: 4px; }
+  .tag.ok { background: #e3f4ea; color: var(--ok); }
+  .tag.new { background: #e8eefc; color: var(--accent); }
+  .tag.warn { background: #fff1dc; color: var(--warn); }
+  .tag.bad { background: #fdeceb; color: var(--bad); }
+  .bar { display: flex; gap: 10px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+  .grow { flex: 1; }
+  button { font: inherit; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line);
+           background: var(--card); color: var(--text); cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.danger { background: var(--bad); border-color: var(--bad); color: #fff; font-weight: 600; }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  progress { width: 100%; height: 16px; }
+  .big { font-size: 26px; font-weight: 700; margin: 8px 0; }
+  .note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+  .error { color: var(--bad); font-weight: 600; }
+  .center { text-align: center; padding: 36px 20px; }
+  input[type=checkbox] { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Go2 Offload</h1>
+  <span id="link" class="pill off">Robot not connected</span>
+  <span id="disk" class="meta"></span>
+  <span id="dest" class="meta"></span>
+  <span id="clock" class="meta"></span>
+</header>
+<main><div id="view" class="card"></div></main>
+
+<script>
+"use strict";
+const view = document.getElementById("view");
+let state = null;
+let rendered = "";            // signature of what the view currently shows
+const picked = new Set();     // sessions ticked for export
+const toDelete = new Set();   // sessions ticked for deletion
+
+const gb = b => (b / 1e9).toFixed(b < 1e10 ? 2 : 1) + " GB";
+const pad = n => String(n).padStart(2, "0");
+
+function when(s) {
+  if (!s.start_time) return s.id.split("/").slice(1).join(" ");
+  const d = new Date(s.start_time * 1000);
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "  " +
+         pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+}
+function duration(sec) {
+  if (sec == null) return "—";
+  const s = Math.round(sec);
+  return (s >= 3600 ? Math.floor(s / 3600) + "h " : "") + Math.floor(s % 3600 / 60) + "m " + (s % 60) + "s";
+}
+function eta(sec) {
+  if (sec == null) return "";
+  return sec < 90 ? Math.round(sec) + " s left" : Math.round(sec / 60) + " min left";
+}
+function el(tag, attrs, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") node.className = v;
+    else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) node.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of children) if (c != null) node.append(c);
+  return node;
+}
+async function post(path, body) {
+  const r = await fetch(path, {method: "POST", headers: {"Content-Type": "application/json"},
+                               body: JSON.stringify(body || {})});
+  const j = await r.json();
+  if (!j.ok) alert(j.error || "Request failed");
+  refresh();
+}
+
+function tags(s, verified) {
+  const out = [];
+  if (s.recording) out.push(el("span", {class: "tag bad"}, "recording now"));
+  if (s.exported || verified) out.push(el("span", {class: "tag ok"}, "copied"));
+  else out.push(el("span", {class: "tag new"}, "not copied"));
+  if (s.clean_stop === false && !s.recording) out.push(el("span", {class: "tag warn"}, "interrupted"));
+  if (s.start_time && s.start_time < 1.6e9) out.push(el("span", {class: "tag warn"}, "clock was not set"));
+  return out;
+}
+
+function sessionTable(sessions, chosen, onChange, verifiedIds) {
+  const body = el("tbody");
+  for (const s of sessions) {
+    const box = el("input", {type: "checkbox", checked: chosen.has(s.id), disabled: s.recording});
+    const toggle = () => {
+      if (s.recording) return;
+      chosen.has(s.id) ? chosen.delete(s.id) : chosen.add(s.id);
+      box.checked = chosen.has(s.id);
+      onChange();
+    };
+    box.addEventListener("click", e => { e.stopPropagation(); toggle(); });
+    const img = s.has_thumbnail
+      ? el("img", {class: "thumb", loading: "lazy", src: "/api/thumb?id=" + encodeURIComponent(s.id)})
+      : el("div", {class: "thumb"});
+    body.append(el("tr", {class: "row", onclick: toggle},
+      el("td", {}, box),
+      el("td", {}, img),
+      el("td", {}, el("div", {class: "when"}, when(s)), el("div", {class: "meta"}, s.id)),
+      el("td", {}, duration(s.duration_s)),
+      el("td", {}, gb(s.size_bytes)),
+      el("td", {}, ...tags(s, verifiedIds && verifiedIds.includes(s.id)))));
+  }
+  return el("table", {},
+    el("thead", {}, el("tr", {}, el("th"), el("th", {}, "Preview"), el("th", {}, "Recorded"),
+       el("th", {}, "Length"), el("th", {}, "Size"), el("th", {}, "Status"))),
+    body);
+}
+
+// ---------------------------------------------------------------- views
+function viewWaiting() {
+  view.replaceChildren(el("div", {class: "center"},
+    el("h2", {}, "Waiting for the robot…"),
+    el("p", {class: "sub"}, "Turn the robot on and plug its Ethernet port into this computer. " +
+       "This page updates by itself once the robot answers."),
+    el("p", {class: "meta"}, "Looking for " + state.robot)));
+}
+
+function viewList() {
+  const sessions = state.sessions;
+  if (!sessions.length) {
+    view.replaceChildren(el("div", {class: "center"}, el("h2", {}, "No sessions on the robot")));
+    return;
+  }
+  const summary = el("span", {class: "meta"});
+  const go = el("button", {class: "primary", onclick: () => post("/api/export", {ids: [...picked]})},
+                "Copy selected to this computer");
+  const update = () => {
+    const sel = sessions.filter(s => picked.has(s.id));
+    summary.textContent = sel.length + " selected · " + gb(sel.reduce((a, s) => a + s.size_bytes, 0));
+    go.disabled = sel.length === 0;
+  };
+  const selectNew = el("button", {onclick: () => {
+    sessions.forEach(s => { if (!s.exported && !s.recording) picked.add(s.id); });
+    rendered = ""; render();
+  }}, "Select all not yet copied");
+  const clear = el("button", {onclick: () => { picked.clear(); rendered = ""; render(); }}, "Clear");
+  view.replaceChildren(
+    el("h2", {}, "Sessions on the robot"),
+    el("p", {class: "sub"}, "Tick the recordings you want, then copy them. Nothing is removed from the robot at this step."),
+    sessionTable(sessions, picked, update),
+    el("div", {class: "bar"}, selectNew, clear, el("span", {class: "grow"}), summary, go));
+  update();
+}
+
+function viewProgress() {
+  const title = state.phase === "transfer" ? "Copying to this computer" :
+                state.phase === "verify" ? "Checking every file" : "Deleting from the robot";
+  const pct = state.bytes_total ? 100 * state.bytes_done / state.bytes_total : 0;
+  const rows = [el("h2", {}, title)];
+  if (state.phase === "delete") {
+    rows.push(el("p", {class: "sub"}, "Please wait…"));
+  } else {
+    rows.push(el("p", {class: "sub"}, "Session " + state.current + " of " + state.selected.length +
+                 (state.message ? " · " + state.message : "")));
+    rows.push(el("div", {class: "big"}, pct.toFixed(1) + " %"));
+    rows.push(el("progress", {max: 100, value: pct}));
+    rows.push(el("p", {class: "meta"}, gb(state.bytes_done) + " of " + gb(state.bytes_total) + " · " +
+                 (state.speed / 1e6).toFixed(1) + " MB/s · " + eta(state.eta_s)));
+    rows.push(el("p", {class: "note"}, "Keep the cable plugged in and the robot on. " +
+                 "If the link drops, copying resumes where it stopped."));
+  }
+  view.replaceChildren(...rows);
+}
+
+function viewDelete() {
+  const sessions = state.sessions;
+  const summary = el("span", {class: "meta"});
+  const go = el("button", {class: "danger"}, "Delete selected from the robot");
+  const update = () => {
+    const sel = sessions.filter(s => toDelete.has(s.id));
+    const unsafe = sel.filter(s => !s.exported && !state.verified.includes(s.id));
+    summary.textContent = sel.length + " to delete · frees " + gb(sel.reduce((a, s) => a + s.size_bytes, 0)) +
+                          (unsafe.length ? " · " + unsafe.length + " NOT copied" : "");
+    go.disabled = sel.length === 0;
+  };
+  go.addEventListener("click", () => {
+    const sel = sessions.filter(s => toDelete.has(s.id));
+    const unsafe = sel.filter(s => !s.exported && !state.verified.includes(s.id));
+    if (unsafe.length && !confirm(unsafe.length + " selected session(s) have NOT been copied anywhere.\n" +
+        "Deleting them is permanent. Delete anyway?")) return;
+    post("/api/delete", {ids: sel.map(s => s.id)});
+  });
+  const keep = el("button", {onclick: () => post("/api/delete", {ids: []})}, "Keep everything on the robot");
+  view.replaceChildren(
+    el("h2", {}, "Copied and verified — free up the robot?"),
+    el("p", {class: "sub"}, state.verified.length + " session(s) are safely on this computer in " + state.dest +
+       ". They are pre-selected below. You may also tick sessions that were not copied; those would be lost for good."),
+    sessionTable(sessions, toDelete, update, state.verified),
+    el("div", {class: "bar"}, keep, el("span", {class: "grow"}), summary, go));
+  update();
+}
+
+function viewDone() {
+  view.replaceChildren(el("div", {class: "center"},
+    el("h2", {}, "All done"),
+    el("div", {class: "big"}, "You can unplug the cable now."),
+    el("p", {class: "sub"}, state.verified.length + " session(s) copied to " + state.dest + " · " +
+       state.deleted.length + " deleted from the robot." + (state.message ? " " + state.message : "")),
+    el("button", {onclick: () => post("/api/reset")}, "Back to the session list")));
+}
+
+function viewError() {
+  view.replaceChildren(el("div", {class: "center"},
+    el("h2", {}, "Something went wrong"),
+    el("p", {class: "error"}, state.error),
+    el("p", {class: "sub"}, "Nothing was deleted from the robot. Files already copied are kept, so trying again continues from there."),
+    el("button", {class: "primary", onclick: () => post("/api/reset")}, "Back to the session list")));
+}
+
+// ---------------------------------------------------------------- loop
+function header() {
+  const link = document.getElementById("link");
+  link.textContent = state.connected ? "Robot connected" : "Robot not connected";
+  link.className = "pill " + (state.connected ? "on" : "off");
+  document.getElementById("disk").textContent = state.connected && state.disk.total
+    ? "Robot disk: " + gb(state.disk.free) + " free of " + gb(state.disk.total) : "";
+  document.getElementById("dest").textContent = "Saving to: " + state.dest;
+  const c = state.clock;
+  document.getElementById("clock").textContent = !c ? "" :
+    c.status === "set" ? "Robot clock corrected" :
+    c.status === "failed" ? "Robot clock could not be set" : "";
+}
+
+function render() {
+  header();
+  const busy = ["transfer", "verify", "delete"].includes(state.phase);
+  const list = state.sessions.map(s => s.id + (s.exported ? "+" : "-") + s.recording + s.size_bytes).join("|");
+  const sig = busy ? "" : [state.connected, state.phase, list, state.error].join("#");
+  if (busy) { viewProgress(); rendered = ""; return; }
+  if (sig === rendered) return;       // keep checkboxes and scroll position
+  rendered = sig;
+  if (state.phase === "done") return viewDone();
+  if (state.phase === "error") return viewError();
+  if (!state.connected) return viewWaiting();
+  if (state.phase === "await_delete") return viewDelete();
+  viewList();
+}
+
+let lastPhase = "";
+async function refresh() {
+  try {
+    state = await (await fetch("/api/state")).json();
+  } catch (e) { return; }
+  if (state.phase === "await_delete" && lastPhase !== "await_delete") {
+    toDelete.clear();
+    state.verified.forEach(id => toDelete.add(id));
+  }
+  if (state.phase === "idle" && lastPhase !== "idle") picked.clear();
+  lastPhase = state.phase;
+  render();
+}
+refresh();
+setInterval(refresh, 1000);
+</script>
+</body>
+</html>
