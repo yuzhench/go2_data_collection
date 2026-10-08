@@ -17,7 +17,46 @@ On your laptop, once:
 
 There is nothing else to install.
 
-## 1. Record
+## 1. Drive the robot
+
+The robot is driven with the Unitree handheld controller.
+
+**Power on**
+
+1. Lay the robot flat on the ground with all four feet touching the floor.
+   Keep people and objects 2 m away.
+2. On the battery, press the power button once, then press and hold it until
+   the robot starts. It stands up by itself within a minute.
+3. Turn the controller on.
+
+**Sticks**
+
+| Stick | Push forward / back | Push left / right |
+|---|---|---|
+| Left | Walk forward / backward | Step sideways |
+| Right | Tilt the body up / down | Turn left / right |
+
+**Buttons**
+
+"Hold" means keep the first button pressed while you click the second.
+
+| To do this | Press |
+|---|---|
+| **Emergency stop** (motors go limp, the robot sinks down) | hold **L2** + **B** |
+| Lock the stance / lie down (press twice to stand again) | hold **L2** + **A** |
+| Unlock and walk | **START** |
+| Run | hold **L2** + **START** |
+| Stand up after a fall | hold **L2** + **X** |
+| Obstacle avoidance on | **X** |
+| Obstacle avoidance off | hold **Y** for 3 seconds |
+
+Learn the emergency stop before you start. If the robot does anything you
+did not intend, use it.
+
+**Power off:** lie the robot down (hold **L2** + **A**), then press the
+battery button once and press and hold it again.
+
+## 2. Record
 
 1. Turn the robot on and wait about a minute.
 2. Long-press the side button of the screen to turn it on. It shows **IDLE**.
@@ -31,11 +70,11 @@ There is nothing else to install.
 A flashing red **!** means a sensor stopped sending data. Stop, check the
 camera cable, and start a new recording.
 
-## 2. Copy your data to your laptop
+## 3. Copy your data to your laptop
 
 Do this the same day. The next person needs the disk space.
 
-1. Keep the robot on and lying down. Plug an Ethernet cable from your laptop
+1. Keep the robot on and lying down (hold **L2** + **A**). Plug an Ethernet cable from your laptop
    into the port on the robot's back. The screen shows **PC LINKED**.
 2. In the downloaded folder, run:
    ```
@@ -64,7 +103,7 @@ Two rules:
 - A recording marked **not copied** exists only on the robot. Deleting it is
   permanent.
 
-## 3. Label your data
+## 4. Label your data
 
 Coming soon.
 
@@ -72,6 +111,7 @@ Coming soon.
 
 | You see | Do this |
 |---|---|
+| Robot does something unexpected | Emergency stop: hold **L2** + **B**. |
 | Screen is black | Long-press the side button of the screen. |
 | **NO LINK** on the screen | The robot is still starting; wait a minute. If it stays, restart the robot. |
 | **ERROR** after holding to start | The camera is not detected. Re-plug the camera cable and try again. |
