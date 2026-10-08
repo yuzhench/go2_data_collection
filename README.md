@@ -1,148 +1,102 @@
 # Go2 Data Collection — User Guide
 
-Record with the robot's round screen. Back in the lab, copy the data to your
-laptop over one Ethernet cable.
+Use the round screen to record, then copy recordings to your laptop over Ethernet.
 
 ![Screen states](docs/screen_states.png)
 
-## Before your first session
-
-On your laptop, once:
-
-1. Install Python 3.8 or newer.
-2. Download this repository:
-   ```
-   git clone https://github.com/yuzhench/go2_data_collection.git
-   ```
-
-There is nothing else to install.
-
 ## 1. Drive the robot
 
-The robot can be driven with the Unitree handheld controller or with the
-Unitree Go phone app. Use the controller for recording: it reaches further
-(100 m in the open) and has a physical emergency stop.
+**Emergency stop:** hold **L2** and press **B**. The robot goes limp and drops.
 
 ### Power on
 
-1. Lay the robot on its belly on flat ground, legs folded, all four feet
-   touching the floor. Keep people and objects 2 m away.
-2. On the battery, press the power button once, then press it again and hold
-   for 2 seconds. The head light flashes green and the robot stands up by
-   itself. It is ready when the light stays green (up to 2 minutes).
+1. Put the robot on flat ground, belly down, legs folded.
+2. Press the battery button once, then press again and hold for two seconds.
+   Wait about two minutes for the head light to turn steady green.
+3. Switch on the controller.
 
-### With the controller
+### Walk and stop
 
-Turn the controller on the same way as the robot: press its power button
-once, then press again and hold for 2 seconds until it beeps. Turn it off
-the same way (three beeps).
-
-**Sticks**
-
-| Stick | Push forward / back | Push left / right |
-|---|---|---|
-| Left | Walk forward / backward | Step sideways |
-| Right | Look up / down | Turn left / right |
-
-**Buttons**
-
-"Hold" means keep the first button pressed while you click the second.
-
-| To do this | Press |
+| Action | Control |
 |---|---|
-| **Emergency stop** (motors go limp, the robot sinks down) | hold **L2** + **B** |
-| Lock the joints while standing | hold **L2** + **A** |
-| Lie down | hold **L2** + **A** a second time |
-| Unlock and walk | **START** |
-| Run | hold **L2** + **START** |
-| Stand up after a fall | hold **L2** + **X** |
-| Obstacle avoidance on | **X** |
-| Obstacle avoidance off | hold **Y** for 3 seconds |
+| Unlock / walk | START |
+| Forward / backward | Left stick forward / backward |
+| Sideways | Left stick left / right |
+| Turn | Right stick left / right |
+| Lock standing; press again to lie down | L2 + A |
+| Emergency stop | L2 + B |
 
-Learn the emergency stop before you start. If the robot does anything you
-did not intend, use it.
+Other modes are in Unitree's [Go2 manual](https://marketing.unitree.com/article/en/Go2/User_Manual.html)
+and [controller manual](https://marketing.unitree.com/article/en/Go2/Handheld_Remote_Control.html).
 
-### With the phone app
+### Phone app
 
-1. Install **Unitree Go** from the App Store or Google Play and log in with
-   the lab account. The robot is bound to one account at a time.
-2. Connect your phone to the robot's own Wi-Fi hotspot, named `GO2-xxxxxx`.
-   This works outdoors; no router is needed.
-3. Open the app. It shows the robot's camera and two on-screen sticks, and
-   its built-in tutorial walks you through the controls.
-
-Only the app can do these:
-
-- Show the robot's live camera view.
-- Calibrate the IMU and legs, and update the firmware.
-- Pair a new handheld controller (Settings → Remote Control Settings).
-- Trigger the extra gaits (moonwalk, side step, cross step).
-
-### Power off
-
-Lie the robot down (hold **L2** + **A**, twice), then press
-the battery button once and press it again for 2 seconds.
+Sign in to [Unitree Go](https://www.unitree.com/mobile/app/go2/) with the lab
+account and connect through the robot's hotspot. The app also has the camera
+view, controller pairing and calibration.
 
 ## 2. Record
 
-1. Turn the robot on and wait about a minute.
-2. Long-press the side button of the screen to turn it on. It shows **IDLE**.
-3. Check **FREE** on the right. One minute of recording uses about 1.3 GB.
-4. **Start:** hold the centre circle for 1 second, until the white ring closes.
-   The timer stays at `00:00` for 2 seconds; data is kept from then on.
-5. While recording, all five circles should be green:
-   `CAM 30`, `LIDAR 15`, `IMU` / `JOINT` / `FOOT 500`.
-6. **Stop:** hold the centre circle for 1 second again and wait for **IDLE**.
+Before going out, connect your laptop and run the offload tool once (section 3).
+This sets the robot's clock.
 
-A flashing red **!** means a sensor stopped sending data. Stop, check the
-camera cable, and start a new recording.
+1. Long-press the screen's side button and wait for **IDLE**.
+2. Check **FREE**. Recording uses about 1.3 GB per minute.
+3. Hold the centre circle for one second, until the ring closes. Recording
+   begins two seconds later.
+4. Watch the five indicators: `CAM 30`, `LIDAR 15`, `IMU / JOINT / FOOT 500`.
+   A red **!** marks a stream that has dropped or failed to save. Stop and
+   record again.
+5. Hold the centre again to stop. Wait for **SAVING** to return to **IDLE**
+   before copying data or powering off.
 
-## 3. Copy your data to your laptop
+## 3. Copy recordings
 
-Do this the same day. The next person needs the disk space.
+Once per laptop, install Python 3.8 or newer and get this repository:
 
-1. Keep the robot on and lying down (hold **L2** + **A**, twice). Plug an Ethernet cable from your laptop
-   into the port on the robot's back. The screen shows **PC LINKED**.
-2. In the downloaded folder, run:
-   ```
-   cd go2_data_collection
+```bash
+git clone https://github.com/yuzhench/go2_data_collection.git
+```
+
+1. Lie the robot down and keep it powered on. Connect the laptop to the
+   Ethernet port on the robot's back. Leave the laptop's Ethernet on
+   automatic (DHCP).
+2. In the repository folder, run:
+
+   ```bash
    python go2_offload.py
    ```
-   (`python3` on macOS and Linux.) A page opens in your browser with every
-   recording on the robot.
+
+   A browser page lists the sessions and the screen shows **PC LINKED**.
+3. Select your sessions and click **Copy selected to this computer**.
+   The screen shows **EXPORT**, then **VERIFY**.
 
    ![Session list](docs/session_list.png)
 
-3. Tick your recordings and click **Copy selected to this computer**.
-   The robot's screen shows **EXPORT**, then **VERIFY**. One hour of
-   recording takes about 15 minutes.
-4. The page then asks what to delete from the robot. Your copied recordings
-   are already ticked. Click **Delete selected from the robot**.
-5. When the screen shows **DONE – UNPLUG OK**, unplug the cable and turn the
-   robot off.
+4. Choose which copied sessions to delete from the robot.
+5. Unplug the cable and stop the tool with Ctrl-C.
 
-Your data is in the `Go2Data` folder in your home directory. To put it
-somewhere else, run `python go2_offload.py --dest <folder>`.
+Files go to `Go2Data` in your home directory. To choose another folder:
 
-Two rules:
+```bash
+python go2_offload.py --dest /path/to/folder
+```
 
-- Only delete your own recordings.
-- A recording marked **not copied** exists only on the robot. Deleting it is
-  permanent.
+The copied files are raw recordings. Convert them with the
+[recording repository](https://github.com/yuzhench/Harvard_AI_Robotics_go2_recording_system).
 
-## 4. Label your data
+## 4. Power off
 
-Coming soon.
+Press L2 + A until the robot lies down. Press the battery button once, then
+press again and hold for two seconds.
 
-## If something is wrong
+## Troubleshooting
 
-| You see | Do this |
+| Symptom | Action |
 |---|---|
-| Robot does something unexpected | Emergency stop: hold **L2** + **B**. |
-| Screen is black | Long-press the side button of the screen. |
-| **NO LINK** on the screen | The robot is still starting; wait a minute. If it stays, restart the robot. |
-| **ERROR** after holding to start | The camera is not detected. Re-plug the camera cable and try again. |
-| Red **!** while recording | A sensor dropped out. Stop and start a new recording. |
-| Page says *Robot not connected* | Check that the robot is on and the cable is plugged in at both ends. |
-| Copy stops halfway | Plug the cable back in. Copying continues from where it stopped. |
-| Page says *Something went wrong* | Nothing was deleted. Click **Back to the session list** and copy again; finished files are skipped. |
+| Black screen | Long-press its side button; check its USB cable. |
+| NO LINK | Wait for the robot to finish starting; check the screen's USB cable. |
+| ERROR | Check the camera cable and free space, then try again. |
+| Robot not connected | Check the Ethernet cable and that the laptop's Ethernet is on automatic (DHCP). |
+| Copy interrupted or failed | Reconnect and copy the same sessions again. Finished files are not downloaded again. |
+| Deletion failed | Refresh the list and delete again. |

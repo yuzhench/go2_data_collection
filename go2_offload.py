@@ -12,8 +12,8 @@ robot; you pick the ones to copy, and the tool then
     2. verifies every file         (sha256 against the robot's copy)
     3. offers to delete them from the robot
 
-The robot's round screen shows the same progress. Nothing is deleted from
-the robot before its copy here has been verified.
+The robot's round screen shows the same progress. Deletion requires confirmation; the deletion selection can include sessions
+that were not copied in the current job.
 
 Only the Python standard library is used (Python 3.8+).
 """
@@ -260,6 +260,12 @@ class Offloader:
 
     def _run_job(self):
         try:
+            # Do not rely on the next best-effort heartbeat: acquire the
+            # server's idle/export exclusion before reading session files.
+            self.robot.post_json("/export/state", {
+                "phase": "transfer", "progress": 0,
+                "current": 0, "total": len(self.selected),
+            })
             plan = []
             for sid in self.selected:
                 listing = self._retry("Listing files", lambda: self.robot.get_json(
@@ -297,6 +303,10 @@ class Offloader:
         except Exception as e:  # surfaced in the UI; nothing was deleted
             with self.lock:
                 self.phase, self.error = "error", str(e)
+        finally:
+            if self._conn is not None:
+                self._conn.close()
+                self._conn = None
 
     def _download_pack(self, sid: str, files):
         """Fetch a batch of small files in one request (see /sessions/pack)."""
@@ -313,7 +323,9 @@ class Offloader:
 
         def attempt():
             # Files finished by a failed earlier attempt are not asked for again.
-            todo = [f for f in missing if not (base / f["path"]).exists()]
+            todo = [f for f in missing
+                    if not (base / f["path"]).is_file()
+                    or (base / f["path"]).stat().st_size != f["size"]]
             if not todo:
                 return
             conn = http.client.HTTPConnection(self.robot.host, self.robot.port, timeout=60)
