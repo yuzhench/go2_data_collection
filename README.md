@@ -23,18 +23,21 @@ The robot is driven with the Unitree handheld controller.
 
 **Power on**
 
-1. Lay the robot flat on the ground with all four feet touching the floor.
-   Keep people and objects 2 m away.
-2. On the battery, press the power button once, then press and hold it until
-   the robot starts. It stands up by itself within a minute.
-3. Turn the controller on.
+1. Lay the robot on its belly on flat ground, legs folded, all four feet
+   touching the floor. Keep people and objects 2 m away.
+2. On the battery, press the power button once, then press it again and hold
+   for 2 seconds. The head light flashes green and the robot stands up by
+   itself. It is ready when the light stays green (up to 2 minutes).
+3. Turn the controller on the same way: press its power button once, then
+   press again and hold for 2 seconds until it beeps. Turn it off the same
+   way (three beeps).
 
 **Sticks**
 
 | Stick | Push forward / back | Push left / right |
 |---|---|---|
 | Left | Walk forward / backward | Step sideways |
-| Right | Tilt the body up / down | Turn left / right |
+| Right | Look up / down | Turn left / right |
 
 **Buttons**
 
@@ -43,7 +46,8 @@ The robot is driven with the Unitree handheld controller.
 | To do this | Press |
 |---|---|
 | **Emergency stop** (motors go limp, the robot sinks down) | hold **L2** + **B** |
-| Lock the stance / lie down (press twice to stand again) | hold **L2** + **A** |
+| Lock the joints while standing | hold **L2** + **A** |
+| Lie down | hold **L2** + **A** a second time |
 | Unlock and walk | **START** |
 | Run | hold **L2** + **START** |
 | Stand up after a fall | hold **L2** + **X** |
@@ -53,8 +57,8 @@ The robot is driven with the Unitree handheld controller.
 Learn the emergency stop before you start. If the robot does anything you
 did not intend, use it.
 
-**Power off:** lie the robot down (hold **L2** + **A**), then press the
-battery button once and press and hold it again.
+**Power off:** lie the robot down (hold **L2** + **A**, twice), then press
+the battery button once and press it again for 2 seconds.
 
 ## 2. Record
 
@@ -74,7 +78,7 @@ camera cable, and start a new recording.
 
 Do this the same day. The next person needs the disk space.
 
-1. Keep the robot on and lying down (hold **L2** + **A**). Plug an Ethernet cable from your laptop
+1. Keep the robot on and lying down (hold **L2** + **A**, twice). Plug an Ethernet cable from your laptop
    into the port on the robot's back. The screen shows **PC LINKED**.
 2. In the downloaded folder, run:
    ```
