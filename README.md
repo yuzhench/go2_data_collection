@@ -19,18 +19,23 @@ There is nothing else to install.
 
 ## 1. Drive the robot
 
-The robot is driven with the Unitree handheld controller.
+The robot can be driven with the Unitree handheld controller or with the
+Unitree Go phone app. Use the controller for recording: it reaches further
+(100 m in the open) and has a physical emergency stop.
 
-**Power on**
+### Power on
 
 1. Lay the robot on its belly on flat ground, legs folded, all four feet
    touching the floor. Keep people and objects 2 m away.
 2. On the battery, press the power button once, then press it again and hold
    for 2 seconds. The head light flashes green and the robot stands up by
    itself. It is ready when the light stays green (up to 2 minutes).
-3. Turn the controller on the same way: press its power button once, then
-   press again and hold for 2 seconds until it beeps. Turn it off the same
-   way (three beeps).
+
+### With the controller
+
+Turn the controller on the same way as the robot: press its power button
+once, then press again and hold for 2 seconds until it beeps. Turn it off
+the same way (three beeps).
 
 **Sticks**
 
@@ -57,7 +62,25 @@ The robot is driven with the Unitree handheld controller.
 Learn the emergency stop before you start. If the robot does anything you
 did not intend, use it.
 
-**Power off:** lie the robot down (hold **L2** + **A**, twice), then press
+### With the phone app
+
+1. Install **Unitree Go** from the App Store or Google Play and log in with
+   the lab account. The robot is bound to one account at a time.
+2. Connect your phone to the robot's own Wi-Fi hotspot, named `GO2-xxxxxx`.
+   This works outdoors; no router is needed.
+3. Open the app. It shows the robot's camera and two on-screen sticks, and
+   its built-in tutorial walks you through the controls.
+
+Only the app can do these:
+
+- Show the robot's live camera view.
+- Calibrate the IMU and legs, and update the firmware.
+- Pair a new handheld controller (Settings → Remote Control Settings).
+- Trigger the extra gaits (moonwalk, side step, cross step).
+
+### Power off
+
+Lie the robot down (hold **L2** + **A**, twice), then press
 the battery button once and press it again for 2 seconds.
 
 ## 2. Record
