@@ -168,7 +168,37 @@ Notes:
 - To remove a submission, click **Withdraw** next to it under
   **Your submissions**.
 
-## 5. Power off
+## 5. Mark clips
+
+After a recording is submitted, mark the parts to keep. The video is read from
+your laptop; nothing is uploaded again.
+
+1. Under **Your submissions**, click **Edit clips** next to the recording.
+2. Click **Open recording folder** and select the recording's folder
+   (`Go2Data/<task>/<date>/<time>/`) or the whole `Go2Data` folder. The page
+   checks that the files are identical to the uploaded ones; changes are saved
+   once it shows **matches the upload**.
+3. Mark the recording:
+   - **Add keyframe here** (K) marks the current frame. Click a keyframe to
+     write a note on it.
+   - **Cut…**, then click two keyframes: the frames between them are
+     discarded and skipped during playback. Click a discarded part and
+     **Restore this part** to undo it.
+   - **Record as one episode…**, then click two keyframes: the part between
+     them becomes an episode. Click an episode on the right to open it and add
+     keyframes, cuts and a note inside it.
+4. Changes are saved automatically (**All changes saved**).
+
+Keys: Space play/pause, ← / → one frame, Shift + ← / → one second, Ctrl + Z
+undo. Click or drag on the timeline to move.
+
+Episodes cannot overlap or include a discarded part. To cut inside an
+episode, open the episode first. The recording itself is not changed; the
+marks are stored as `clips.json` in the recording's folder in the lab storage,
+with each frame's time so the IMU and LiDAR data can be cut at the same
+moments.
+
+## 6. Power off
 
 Press L2 + A until the robot lies down. Press the battery button once, then
 press again and hold for two seconds.
