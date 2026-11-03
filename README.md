@@ -179,6 +179,7 @@ your laptop; nothing is uploaded again.
    checks that the files are identical to the uploaded ones; changes are saved
    once it shows **matches the upload**.
 3. Mark the recording:
+   - **Task note**: on **Full recording**, describe the whole task.
    - **Add keyframe here** (K) marks the current frame. Click a keyframe to
      write a note on it.
    - **Cut…**, then click two keyframes: the frames between them are
@@ -197,6 +198,42 @@ episode, open the episode first. The recording itself is not changed; the
 marks are stored as `clips.json` in the recording's folder in the lab storage,
 with each frame's time so the IMU and LiDAR data can be cut at the same
 moments.
+
+### What to mark
+
+**Cuts.** Cut unusable footage at the start and end, such as the operator
+still setting up or the time after the task is finished.
+
+**Task note.** Every recording gets a task note on **Full recording**: what
+the robot does from start to finish.
+
+**Episodes.** If the task has several steps, record each step as an episode
+and write in its note what the robot does in that step. A recording with one
+step needs no episodes.
+
+**Keyframe notes.** Add a keyframe where the robot sees something a later
+decision depends on, and write what it sees: a sign that shows which way to
+go, the person the robot is about to follow. Open the episode first and add
+the keyframe inside it. Keyframes used only as the ends of a cut or episode
+need no note.
+
+Write notes in English.
+
+### Example
+
+A 6 min 30 s recording. Task note: *Walk from the lab to the elevator lobby
+following the signs, then follow a person back to the lab.*
+
+| Time | Mark | Note |
+|---|---|---|
+| 0:00–0:20 | Cut: operator still setting up | — |
+| 0:20–2:10 | Episode 1 | Leave the lab and walk to the end of the hallway. |
+| 2:10–3:50 | Episode 2 | Follow the signs to the elevator lobby. |
+| 2:25 | Keyframe in episode 2 | Sign "Elevators →" on the right wall. |
+| 3:50–6:05 | Episode 3 | Follow the person in the red jacket back to the lab. |
+| 3:55 | Keyframe in episode 3 | Person in a red jacket in front of the robot. |
+| 5:58 | Keyframe in episode 3 | Lab door on the left. |
+| 6:05–6:30 | Cut: task done, operator stops the recording | — |
 
 ## 6. Power off
 
